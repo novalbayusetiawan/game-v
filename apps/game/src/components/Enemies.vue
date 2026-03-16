@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useLoop } from "@tresjs/core";
 import { playerPosition, playerStats, skillsState, gameState } from "../store";
+import Vampire from "./Vampire.vue";
 
 // Spawn enemies over time
 setInterval(() => {
@@ -19,6 +20,11 @@ setInterval(() => {
       state: "idle",
       targetX: 0,
       targetZ: 0,
+      variant: (["Converted_Vampire", "Vampire_Girl", "Countess_Vampire"] as const)[
+        Math.floor(Math.random() * 3)
+      ],
+      isFacingRight: Math.random() > 0.5,
+      animState: "idle",
     });
   }
 }, 2000);
@@ -49,8 +55,11 @@ useLoop().onBeforeRender(() => {
         // Move towards player
         enemy.x += (dx / distPlayer) * enemy.speed;
         enemy.z += (dz / distPlayer) * enemy.speed;
+        enemy.isFacingRight = dx > 0;
+        enemy.animState = "run";
       } else {
         // Hit player
+        enemy.animState = "attack";
         if (!skillsState.phaseShift.isActive) {
           playerStats.health -= 0.1; // Simple drain while touching
           if (playerStats.health < 0) playerStats.health = 0;
@@ -68,6 +77,10 @@ useLoop().onBeforeRender(() => {
       if (tLen > 0.1) {
         enemy.x += (tdx / tLen) * enemy.speed * 0.5;
         enemy.z += (tdz / tLen) * enemy.speed * 0.5;
+        enemy.isFacingRight = tdx > 0;
+        enemy.animState = "walk";
+      } else {
+        enemy.animState = "idle";
       }
     }
 
@@ -86,21 +99,18 @@ useLoop().onBeforeRender(() => {
 
 <template>
   <TresGroup>
-    <!-- Enemy Groups -> Meshes + Health Bars -->
+    <!-- Enemy Groups -> Sprites + Health Bars -->
     <TresGroup
       v-for="enemy in gameState.enemies"
       :key="enemy.id"
       :position="[enemy.x, enemy.y, enemy.z]"
     >
-      <TresMesh cast-shadow>
-        <TresBoxGeometry :args="[0.8, 1.8, 0.8]" />
-        <TresMeshStandardMaterial color="#8b0000" />
-      </TresMesh>
+      <Vampire :enemy="enemy" />
 
       <!-- Health bar, only show if damaged -->
       <TresMesh
         v-if="enemy.hp < enemy.maxHp"
-        :position="[0, 1.2, 0]"
+        :position="[0, 1.5, 0]"
         :rotation="[-Math.PI / 4, 0, 0]"
       >
         <!-- Full width = 1.0, scaled by hp percentage -->

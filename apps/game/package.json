@@ -19,6 +19,7 @@
     "@capacitor/android": "catalog:",
     "@capacitor/cli": "catalog:",
     "@capacitor/ios": "catalog:",
+    "@cloudflare/vite-plugin": "catalog:",
     "@types/node": "^24.12.0",
     "@types/three": "catalog:",
     "@vitejs/plugin-vue": "^6.0.5",
